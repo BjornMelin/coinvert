@@ -1,7 +1,7 @@
 ---
-description: Step-by-step development plan for building coinvert, including AI agent instructions.
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 description: Step-by-step development plan for building coinvert, including AI agent instructions.
 globs: "\*" # Applies globally

@@ -1,7 +1,7 @@
 ---
-description: Defines the Python script's modular structure, data flow, and core library usage.
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 description: Defines the Python script's modular structure, data flow, and core library usage.
 globs: "\*.py"

@@ -1,7 +1,7 @@
 ---
-description: Core project information, goals, and architecture for coinvert.
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 description: Core project information, goals, and architecture for coinvert.
 globs: "\*" # Applies globally
