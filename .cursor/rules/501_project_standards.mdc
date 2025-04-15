@@ -1,0 +1,59 @@
+---
+description: Defines coding standards, Python version, dependencies, formatting, and best practices for coinvert.
+globs: 
+alwaysApply: false
+---
+description: Defines coding standards, Python version, dependencies, formatting, and best practices for coinvert.
+globs: "\*.py"
+author: Bjorn Melin
+date: 2025-04-15 # Update with current date
+version: 1.0.0
+
+# Project Standards & Best Practices
+
+## Python Version
+
+- **Requirement:** Python 3.11 or higher.
+- **Target:** Develop and test primarily against Python 3.12 (latest stable recommended).
+
+## Dependencies
+
+- **Core:** `polars` (latest stable version). Specify in `requirements.txt`.
+- **Development:** `ruff` (latest stable version). Optionally list in `requirements-dev.txt`.
+- **YAGNI:** Do _not_ add dependencies unless strictly necessary for the core conversion task. Avoid libraries like Pandas, NumPy (directly), requests, etc.
+
+## Code Style & Formatting
+
+- **Formatter:** Ruff (`ruff format .`). Adhere strictly to its default formatting.
+- **Linter:** Ruff (`ruff check .`). Address all linting errors and warnings reported by Ruff's default ruleset.
+- **Configuration:** Use a `pyproject.toml` file to configure Ruff if needed, but defaults are preferred initially.
+
+## Docstrings
+
+- **Style:** Google Style Docstrings are **required** for all modules, public functions, and classes.
+- **Content:** Docstrings should clearly explain the purpose, arguments (`Args:`), return values (`Returns:`), and any raised exceptions (`Raises:`).
+- **Module Header:** Every `.py` file must start with a module-level docstring including a brief description, optional longer description, `Functions:` list (if applicable), `Author: Bjorn Melin`, and `Date: YYYY-MM-DD`.
+
+## Naming Conventions
+
+- **Variables & Functions:** `snake_case` (e.g., `load_source_csv`, `transformed_df`).
+- **Classes:** `PascalCase` (e.g., `DataLoader` - if classes were used).
+- **Constants:** `UPPER_SNAKE_CASE` (e.g., `TURBOTAX_COLUMNS` in `config.py`).
+- **Clarity:** Use descriptive names. Avoid single-letter variables except in very short, obvious contexts (like simple loops, though Polars expressions often avoid loops).
+
+## Error Handling (Implementation Detail)
+
+- **Use Specific Exceptions:** Prefer `FileNotFoundError`, `ValueError`, `KeyError`, `TypeError` over generic `Exception`.
+- **Clear Messages:** Ensure error messages are user-friendly and help diagnose configuration issues (e.g., "Column 'Timestamp' not found in source CSV. Check SOURCE_COLUMN_MAP in config.py").
+- **Context:** Catch exceptions in `main.py` around calls to module functions to provide context about which stage failed (loading, transforming, writing).
+
+## Testing (Future Goal)
+
+- **Ideal:** Unit tests (e.g., using `pytest`) would be highly beneficial for the logic within `transformer.py`, especially the conditional asset/amount calculations. This is not required for the initial version but should be considered for future enhancements.
+- **Manual Testing:** Thoroughly test with various sample input CSVs covering different transaction types during initial development.
+
+## General Principles
+
+- **KISS (Keep It Simple, Stupid):** Avoid unnecessary complexity.
+- **DRY (Don't Repeat Yourself):** Use functions and configuration effectively.
+- **SOLID:** Adhere to principles like Single Responsibility (evident in the modular design).

@@ -1,0 +1,51 @@
+---
+description: Defines the Python script's modular structure, data flow, and core library usage.
+globs: 
+alwaysApply: false
+---
+description: Defines the Python script's modular structure, data flow, and core library usage.
+globs: "\*.py"
+author: Bjorn Melin
+date: 2025-04-15 # Update with current date
+version: 1.0.0
+
+# Script Architecture & Data Flow
+
+## Module Design (Separation of Concerns)
+
+- **`config.py`:** Stores all user-configurable parameters (file paths, column/type mappings, date format). Avoid hardcoding these values elsewhere. Acts as the single source of truth for configuration.
+- **`data_loader.py`:** Responsible _only_ for reading the source CSV file using Polars (`pl.read_csv`). Takes file path and potentially columns to read as input. Handles file-not-found errors.
+- **`transformer.py`:** Contains the _core transformation logic_. Takes a Polars DataFrame as input. Performs renaming, type mapping, date formatting, asset/amount calculations, fee handling, and null filling using Polars expressions (`with_columns`, `when/then/otherwise`, `map_dict`, `select`, etc.). Returns the fully transformed DataFrame. This module should be stateless and rely on input DataFrame and `config.py` values.
+- **`data_writer.py`:** Responsible _only_ for writing the final Polars DataFrame to the output CSV file (`df.write_csv`). Takes DataFrame and output path as input.
+- **`main.py`:** Orchestrates the entire process. Imports functions from other modules. Calls loader -> transformer -> writer in sequence. Handles overall script execution flow and basic logging/print statements.
+
+## Data Flow Diagram
+
+```mermaid
+graph TD
+    A["Start (`main.py`)"] --> B{"Read Config (`config.py`)"};
+    B --> C["Load Source CSV (`data_loader.py`)\nInput: source_path, columns\nOutput: Polars DataFrame (Raw)"];
+    C --> D["Transform Data (`transformer.py`)\nInput: Raw DataFrame, config\nOutput: Polars DataFrame (Transformed)"];
+    D --> E["Write Output CSV (`data_writer.py`)\nInput: Transformed DataFrame, output_path"];
+    E --> F["End (`main.py`)"];
+
+    style C fill:#f9f,stroke:#333,stroke-width:1px
+    style D fill:#f8d7da,stroke:#333,stroke-width:1px
+    style E fill:#ccf,stroke:#333,stroke-width:1px
+```
+
+# Core Libraries & Usage
+
+= **Polars**: The only library for data manipulation. Leverage its expression API for transformations (avoid iterating rows). Use lazy evaluation (.lazy(), .collect()) if beneficial for complex chains or large data, but eager execution is fine for simplicity initially.
+
+- **Python Standard Library**: Use pathlib for path manipulation, datetime potentially for date logic reference (though Polars handles most), sys for basic exit handling in main.py.
+-
+- **No Other Data Libraries**: Do not introduce Pandas, NumPy (unless Polars uses it implicitly), cuDF, or other data manipulation libraries.
+  Error Handling Philosophy
+
+- **Specific Exceptions**: Catch specific exceptions where possible (e.g., FileNotFoundError in loader, potentially polars.exceptions.ComputeError during complex transforms).
+
+- **Informative Messages**: Provide clear error messages indicating the stage (loading, transforming, writing) and the likely cause (e.g., "Configured source file not found:", "Failed to map transaction types, check TYPE_MAPPING in config.py").
+
+- **Fail Fast**: If critical configuration is missing or a core step fails, exit gracefully with an error message (e.g., sys.exit(1) in main.py).
+  Configuration Errors: Validate essential configurations in config.py or early in main.py if feasible.

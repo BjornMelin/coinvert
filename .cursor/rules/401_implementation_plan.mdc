@@ -1,0 +1,51 @@
+---
+description: Step-by-step development plan for building coinvert, including AI agent instructions.
+globs: 
+alwaysApply: false
+---
+description: Step-by-step development plan for building coinvert, including AI agent instructions.
+globs: "\*" # Applies globally
+author: Bjorn Melin
+date: 2025-04-15 # Update with current date
+version: 1.0.0
+
+# Implementation Plan: coinvert
+
+## Phase 1: Project Setup & Configuration (Foundation)
+
+1.  **Create Project Structure:** Set up main directory, `.cursor/rules/` dir, virtual environment (`.venv`).
+2.  **Install Dependencies:** `pip install polars ruff` (or from `requirements.txt`).
+3.  **Initialize Git:** `git init`, create `.gitignore`.
+4.  **Implement `config.py`:** Define all configuration variables (`SOURCE_CSV_PATH`, `TEMPLATE_CSV_PATH`, `OUTPUT_CSV_PATH`, `TURBOTAX_COLUMNS`, placeholders for `SOURCE_COLUMN_MAP`, `TYPE_MAPPING`, `DATE_FORMAT`). Add Google docstrings and module header.
+    - **AI Task (Cursor Agent):** "Using `001_project_overview.mdc` and `501_project_standards.mdc`, create the initial `config.py` file with placeholder variables as defined in `301_data_formats.mdc`. Include required docstrings and module header." (Corresponds to Prompt 1)
+
+## Phase 2: Core Input/Output Modules
+
+5.  **Implement `data_loader.py`:** Create `load_source_csv` and `get_template_header` functions using Polars as specified in `201_script_architecture.mdc`. Include error handling and docstrings.
+    - **AI Task (Cursor Agent):** "Implement the functions in `data_loader.py` according to `201_script_architecture.mdc` and `501_project_standards.mdc`. Use Polars for CSV reading and basic error handling." (Corresponds to Prompt 2)
+6.  **Implement `data_writer.py`:** Create `write_output_csv` function using Polars as specified in `201_script_architecture.mdc`. Include docstrings.
+    - **AI Task (Cursor Agent):** "Implement the `write_output_csv` function in `data_writer.py` according to `201_script_architecture.mdc` and `501_project_standards.mdc`. Use Polars `write_csv`." (Corresponds to Prompt 3)
+
+## Phase 3: Core Transformation Logic (`transformer.py`)
+
+7.  **Create `transformer.py` Stub & Renaming:** Implement the basic `transform_data` function structure. Add the initial column renaming step using `config.SOURCE_COLUMN_MAP`. Include docstrings.
+    - **AI Task (Cursor Agent):** "Create the initial `transformer.py` file with the `transform_data` function stub. Implement the column renaming logic using `config.SOURCE_COLUMN_MAP` as the first step, following `201_script_architecture.mdc` and `501_project_standards.mdc`." (Corresponds to Prompt 4)
+8.  **Implement Date & Type Transformation:** Add Polars expressions to `transform_data` for parsing/formatting dates (`config.DATE_FORMAT`) and mapping transaction types (`config.TYPE_MAPPING`).
+    - **AI Task (Cursor Agent):** "Update `transform_data` in `transformer.py`. Add Polars expressions using `with_columns` to handle Date conversion (using `config.DATE_FORMAT`) and Type mapping (using `config.TYPE_MAPPING`) as described in `301_data_formats.mdc`." (Corresponds to Prompt 5)
+9.  **Implement Asset/Amount/Fee Logic:** Add Polars `when/then/otherwise` expressions to calculate/assign `Sent Asset`, `Sent Amount`, `Received Asset`, `Received Amount`, `Fee Asset`, `Fee Amount` based on the mapped `Type`. **Requires specific logic based on anticipated source data structures - provide examples to AI.**
+    - **AI Task (Cursor Agent):** "Update `transform_data` in `transformer.py`. Add Polars expressions (primarily `when/then/otherwise` based on the 'Type' column) to populate the target columns: 'Sent Asset', 'Sent Amount', 'Received Asset', 'Received Amount', 'Fee Asset', 'Fee Amount'. **Use the following logic based on common patterns [USER: PROVIDE YOUR SPECIFIC LOGIC/EXAMPLES HERE, referencing renamed source columns]**. Ensure amounts are cast correctly (e.g., `pl.Float64`). Refer to `301_data_formats.mdc`." (Corresponds to Prompt 6 - **Needs User Input**)
+10. **Implement Final Columns & Cleanup:** Add expressions for remaining columns (`Market Value Currency`, `Market Value`, `Description`, etc.). Implement null filling (`fill_null`). Add the final `select` statement to ensure correct column order (`config.TURBOTAX_COLUMNS`).
+    - **AI Task (Cursor Agent):** "Finalize `transform_data` in `transformer.py`. Add expressions for remaining columns ('Market Value Currency', 'Market Value', 'Description', 'Transaction Hash', 'Transaction ID'), potentially mapping from renamed source columns or using literals. Implement `.fill_null()` as appropriate based on `301_data_formats.mdc`. Add the final `df.select(config.TURBOTAX_COLUMNS)` step." (Corresponds to Prompt 7)
+
+## Phase 4: Orchestration & Testing
+
+11. **Implement `main.py`:** Create the main execution flow, importing and calling functions from other modules in sequence. Add basic print statements for feedback and `try...except` blocks for error handling around module calls.
+    - **AI Task (Cursor Agent):** "Implement the main execution logic in `main.py`. Import functions from `config`, `data_loader`, `transformer`, `data_writer`. Call them sequentially to load, transform, and write the data. Include basic print feedback and `try...except` blocks around major steps as outlined in `201_script_architecture.mdc`." (Corresponds to Prompt 8)
+12. **Initial Testing:** Populate `config.py` with mappings for a sample source CSV. Run `python main.py`. Inspect the output CSV for correctness against the sample input and TurboTax requirements. Debug `transformer.py` and `config.py` logic as needed.
+
+## Phase 5: Documentation & Refinement
+
+13. **Create `README.md`:** Write comprehensive documentation including overview, features, installation, usage, configuration details, contribution guidelines, etc. Include Mermaid diagram from `201_script_architecture.mdc`.
+    - **AI Task (Cursor Agent):** "Generate the content for `README.md` based on the structure and details provided in the previous chat history (using the `coinvert` name, description, features, installation, usage, configuration, how-it-works with Mermaid, contributing, license, citation, author sections)."
+14. **Add `LICENSE` File:** Include the MIT license text.
+15. **Final Code Review & Formatting:** Run `ruff format .` and `ruff check .`. Ensure all docstrings are complete and accurate.

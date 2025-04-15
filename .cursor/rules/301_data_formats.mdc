@@ -1,0 +1,48 @@
+---
+description: Defines the structure and expectations for input/output CSV data and transformation rules.
+globs: 
+alwaysApply: false
+---
+description: Defines the structure and expectations for input/output CSV data and transformation rules.
+globs: "_.py,_.csv,config.py"
+author: Bjorn Melin
+date: 2025-04-15 # Update with current date
+version: 1.0.0
+
+# Data Formats & Transformation Rules
+
+## Input CSV Format (Source Data)
+
+- **Structure:** Highly variable, depends entirely on the user's source (exchange export, tracking software, etc.).
+- **Configuration:** The script _must not_ assume fixed input column names, date formats, or transaction type descriptions. These **must** be defined by the user in `config.py`:
+  - `SOURCE_COLUMN_MAP`: Dictionary mapping user's source column names to internal script names.
+  - `TYPE_MAPPING`: Dictionary mapping user's source transaction type strings to TurboTax types.
+  - `DATE_FORMAT`: Python `strptime` string matching the source date/time format.
+- **Data Types:** Expect mixed types (strings, numbers, dates). Polars `read_csv` with `infer_schema_length` should handle initial detection. Explicit casting will occur during transformation.
+
+## Output CSV Format (TurboTax Target)
+
+- **Structure:** Must strictly adhere to the TurboTax custom CSV template.
+- **Required Columns (Exact Order & Names):** Defined in `config.TURBOTAX_COLUMNS`. Typically: `['Date', 'Type', 'Sent Asset', 'Sent Amount', 'Received Asset', 'Received Amount', 'Fee Asset', 'Fee Amount', 'Market Value Currency', 'Market Value', 'Description', 'Transaction Hash', 'Transaction ID']`
+- **Date Format:** Must be `%-m/%-d/%Y %H:%M` (e.g., `9/20/2022 23:33`). Use Polars `dt.strftime()` for formatting.
+- **Data Types:**
+  - `Date`: String (formatted as above).
+  - `Type`: String (Mapped values like 'Buy', 'Sale', 'Income', etc.).
+  - `Sent/Received/Fee Asset`: String (e.g., 'BTC', 'ETH', 'USD'). Empty string `""` if not applicable.
+  - `Sent/Received/Fee Amount`: Float (e.g., `0.25`, `5000.0`). Use `0.0` or `None` -> `fill_null(0.0)` if not applicable (check TurboTax preference for blank vs 0).
+  - `Market Value Currency`: String (e.g., 'USD').
+  - `Market Value`: Float. Often left blank/null unless calculable and required. Use `None` -> `fill_null(None)` or `fill_null(0.0)`.
+  - `Description`, `Transaction Hash`, `Transaction ID`: String. Empty string `""` if not available.
+- **Header:** Output file must include this exact header row.
+- **Encoding:** UTF-8 without BOM is preferred.
+
+## Core Transformation Logic (`transformer.py`)
+
+- **Renaming:** First step is always renaming columns using `SOURCE_COLUMN_MAP`.
+- **Date:** Parse using `str.strptime` with `config.DATE_FORMAT`, then format using `dt.strftime`.
+- **Type:** Map using `map_dict` with `config.TYPE_MAPPING`. Handle unmapped types gracefully (e.g., map to 'Unknown' or raise error).
+- **Asset/Amount/Fee Population:** Use Polars `when/then/otherwise` expressions based on the mapped `Type` column. Logic must correctly assign source values (after renaming) to the appropriate `Sent`/`Received`/`Fee` columns.
+  - Example: If `Type == 'Buy'`, `Sent Asset` might be 'USD', `Sent Amount` the cost, `Received Asset` the crypto ticker, `Received Amount` the crypto quantity.
+  - Example: If `Type == 'Income'`, `Sent Asset/Amount` might be null/empty, `Received Asset/Amount` the crypto received.
+- **Null Handling:** Use `.fill_null("")` for string columns and `.fill_null(0.0)` or keep as `None` for numeric columns _after_ all calculations, based on TurboTax requirements for blank fields.
+- **Final Selection:** Use `df.select(config.TURBOTAX_COLUMNS)` as the _last_ step to ensure correct column order and remove intermediate columns.

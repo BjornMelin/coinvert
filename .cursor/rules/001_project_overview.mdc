@@ -1,0 +1,54 @@
+---
+description: Core project information, goals, and architecture for coinvert.
+globs: 
+alwaysApply: false
+---
+description: Core project information, goals, and architecture for coinvert.
+globs: "\*" # Applies globally
+author: Bjorn Melin
+date: 2025-04-15 # Update with current date
+version: 1.0.0
+
+# Project Overview: coinvert
+
+## Project Purpose
+
+- **Problem:** Manually formatting cryptocurrency transaction CSVs for tax software (specifically TurboTax) is tedious, error-prone, and time-consuming. Different exchanges/platforms produce varying CSV formats.
+- **Solution:** `coinvert` is a Python command-line tool that reads a user-provided source transaction CSV, applies user-defined mapping and transformation rules, and outputs a new CSV file formatted precisely for TurboTax's custom CSV import feature.
+- **Target User:** Individuals needing to report cryptocurrency capital gains/losses and income using TurboTax.
+
+## Core Architecture
+
+- **Type:** Command-line Python script.
+- **Main Library:** Polars (for high-performance data manipulation). Explicitly **DO NOT** use Pandas or cuDF.
+- **Structure:** Modular design with separate Python files for distinct concerns:
+  - `config.py`: User-defined settings (paths, mappings).
+  - `data_loader.py`: Handles reading the source CSV.
+  - `transformer.py`: Contains the core data transformation logic using Polars expressions.
+  - `data_writer.py`: Handles writing the formatted output CSV.
+  - `main.py`: Orchestrates the workflow, calling functions from other modules.
+- **Key Technologies:** Python (3.11+), Polars library.
+
+## Key Constraints & Considerations
+
+- **Input Variability:** The source CSV format (column names, date formats, transaction type descriptions) is _not fixed_ and must be configured by the user.
+- **Output Specificity:** The output CSV format _must exactly match_ the TurboTax custom CSV template requirements (column names, order, date format).
+- **Performance:** Must handle potentially large CSV files efficiently (leveraging Polars).
+- **Accuracy:** Transformation logic must be precise to ensure correct tax reporting.
+- **Usability:** Configuration should be straightforward via `config.py`. Error messages should be informative.
+
+## Project Structure (Main Files)
+
+- `.cursor/rules/`: Contains these MDC rule files.
+- `coinvert/`: (Optional package structure) or root directory containing:
+  - `main.py`: Main script execution entry point.
+  - `config.py`: Configuration variables and mappings.
+  - `data_loader.py`: CSV reading functions.
+  - `transformer.py`: Data transformation functions.
+  - `data_writer.py`: CSV writing functions.
+- `requirements.txt`: Project dependencies (primarily Polars).
+- `README.md`: Project documentation.
+- `LICENSE`: Project license file (MIT).
+- `source_transactions.csv`: (Example/User-provided) Input data.
+- `Custom_CSV_Template.csv`: (Reference) TurboTax template.
+- `turbotax_upload.csv`: (Generated) Output file.
