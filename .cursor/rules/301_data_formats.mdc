@@ -1,7 +1,7 @@
 ---
-description: Defines the structure and expectations for input/output CSV data and transformation rules.
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 description: Defines the structure and expectations for input/output CSV data and transformation rules.
 globs: "_.py,_.csv,config.py"

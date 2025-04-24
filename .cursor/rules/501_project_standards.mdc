@@ -1,7 +1,7 @@
 ---
-description: Defines coding standards, Python version, dependencies, formatting, and best practices for coinvert.
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 description: Defines coding standards, Python version, dependencies, formatting, and best practices for coinvert.
 globs: "\*.py"
